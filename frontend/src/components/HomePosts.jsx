@@ -7,7 +7,7 @@ const HomePosts = ({post}) => {
       {/* left */}
 
       <div className="w-[35%] h-[200px] flex justify-center items-center">
-        <img src={"http://localhost:8800/images/" + post.photo} alt="" className="h-full w-full object-cover"/>
+        <img src={post.photo} alt="" className="h-full w-full object-cover"/>
       </div>
 
       {/* right */}

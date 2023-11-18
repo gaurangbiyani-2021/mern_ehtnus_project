@@ -35,45 +35,52 @@ const CreatePost = () => {
          setCats(updatedCats)
      }
 
-    const handleCreate= async (e)=>{
+     const handleCreate = async (e) => {
         e.preventDefault();
-
+    
         const post = {
             title,
             desc,
-            username:user.username,
-            userId:user._id,
-            categories:cats
-        }
-            
-        if(file){
+            username: user.username,
+            userId: user._id,
+            categories: cats
+        };
+    
+        if (file) {
             const data = new FormData();
-            const filename = Date.now()+file.name 
-            data.append("img",filename)
-            data.append("file",file);
-            post.photo = filename 
-
-            // img upload 
-            try{
-                const imgUpload =  await axios.post("http://localhost:8800/api/upload",data);
-                console.log(imgUpload.data);
-                console.log("imgUploaded successfully")
+            const filename = Date.now() + file.name;
+            data.append("file", file);
+            data.append("title", title);
+            data.append("desc", desc);
+            data.append("username", user.username);
+            data.append("userId", user._id);
+            data.append("categories", JSON.stringify(cats));
             
-             }catch(err){
-                 console.log(err);
-             }
+            try {
+                // Upload image and other form data
+                const imgUpload = await axios.post("http://localhost:8800/api/posts/create", data, {
+                    headers: {
+                        "Authorization": "Bearer YOUR_ACCESS_TOKEN",
+                        "Content-Type": "multipart/form-data"
+                    }
+                });
+                console.log(imgUpload.data);
+                console.log("Image uploaded successfully");
+            } catch (err) {
+                console.log(err);
+            }
         }
-        
-        // post upload 
-        try{
-            const res = await axios.post("http://localhost:8800/api/posts/create",post,{withCredentials:true})
-            console.log("post created successfully")
-            navigate("/posts/post/"+res.data._id)
-        }catch(err){
-            console.log(err);
-        }
-
-    }
+    
+        // try {
+        //     // You might need to adjust the endpoint and headers based on your API
+        //     const res = await axios.post("http://localhost:8800/api/posts/create", post, { withCredentials: true });
+        //     console.log("Post created successfully");
+        //     navigate("/posts/post/" + res.data._id);
+        // } catch (err) {
+        //     console.log(err);
+        // }
+    };
+    
  
   return (
 

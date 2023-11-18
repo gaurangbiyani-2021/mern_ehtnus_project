@@ -2,23 +2,68 @@ import express from 'express';
 const router = express.Router();
 import Post from '../models/Post.js';
 import Comment from '../models/Comment.js';
+import multer from "multer";
+import { v2 as cloudinary } from "cloudinary";
+import path from "path";
 import verifyToken from '../verifyToken.js';
 
-
+// Configure Cloudinary
+cloudinary.config({
+    cloud_name: "dsqx3hknt",
+    api_key: "674583734234393",
+    api_secret: "8M6u281j4BiOgm0MMFJMY1pLr9Y",
+  });
+  
+  // Use memory storage for multer
+  const upload=multer({
+      storage: multer.diskStorage({}),
+      fileFilter: (req, file, cb) => {
+        let ext = path.extname(file.originalname);
+        if (ext !== ".jpg" && ext !== ".jpeg" && ext !== ".png") {
+          cb(new Error("Unsupported file type!"), false);
+          return;
+        }
+        cb(null, true);
+      },
+    });
 //create 
-router.post("/create",verifyToken, async (req,res)=>{
-    try{
-        const newPost=new Post(req.body)
-        const savedPost=await newPost.save()
-        
-        res.status(200).json(savedPost)
+// create endpoint for post with image upload
+router.post('/create', upload.single('file'), async (req, res) => {
+    try {
+        console.log("STared");
+        // Check if a file was provided
+        if (!req.file) {
+            return res.status(400).json({ error: 'No file provided' });
+        }
+
+        // Upload image to Cloudinary
+        const result = await cloudinary.uploader.upload(req.file.path, {
+            // folder: 'your_folder_name', // optional
+        });
+
+        // Log the Cloudinary link
+        console.log(result.secure_url);
+
+        // Create a new Post with image URL
+        const newPost = new Post({
+            title: req.body.title,
+            desc: req.body.desc,
+            photo: result.secure_url, // Save Cloudinary image URL
+            username: req.body.username,
+            userId: req.body.userId,
+            categories: req.body.categories,
+        });
+
+        // Save the post to the database
+        const savedPost = await newPost.save();
+
+        // Respond with the saved post
+        res.status(200).json(savedPost);
+    } catch (error) {
+        console.error('Error creating post with image:', error);
+        res.status(500).json('Internal Server Error');
     }
-    catch(err){
-        
-        res.status(500).json(err)
-    }
-     
-})
+});
 
 //update
 router.put('/:id',verifyToken, async (req,res) => {
